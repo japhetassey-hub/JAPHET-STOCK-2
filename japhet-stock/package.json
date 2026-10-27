@@ -1,0 +1,35 @@
+{
+  "name": "japhet-stock-management-system",
+  "version": "0.2.0",
+  "description": "Japhet Stock Management System - Designed and Created by Japhet Assey",
+  "author": "Japhet Assey",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "test": "node --experimental-sqlite --test tests/*.test.ts",
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.japhetassey.stockmanagement",
+    "productName": "Japhet Stock Management System",
+    "copyright": "Designed and Created by Japhet Assey",
+    "directories": { "output": "dist" },
+    "files": ["electron/**/*", "web-preview/**/*", "package.json"],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Japhet-Stock-Management-System-Setup-${version}.exe"
+    }
+  }
+}

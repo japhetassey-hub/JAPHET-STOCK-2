@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Japhet Stock Management System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#1b2430;--mu:#667085;--bd:#e2e6ec;--pr:#0f6b4f;--prt:#fff;--sb:#10241d;--sbt:#cfe3da;--wa:#b7791f;--cr:#c0392b;--ok:#1e8e5a;--in:#eef2f6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1512;--card:#17211c;--tx:#e6efea;--mu:#93a39a;--bd:#2a3a32;--pr:#3fbf8b;--prt:#06150f;--sb:#08100d;--in:#1f2c26;--wa:#e0a84a;--cr:#ef6b5b;--ok:#4cc790;color-scheme:dark}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{font:14px/1.45 system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--tx);display:flex}
+nav{width:210px;background:var(--sb);color:var(--sbt);padding:14px 8px;display:flex;flex-direction:column;gap:2px;overflow:auto;flex:none}
+nav h1{font-size:15px;margin:4px 10px 12px;color:#fff;line-height:1.2}nav button{all:unset;cursor:pointer;padding:8px 10px;border-radius:8px}
+nav button:hover{background:#ffffff14}nav button.on{background:var(--pr);color:var(--prt);font-weight:600}
+main{flex:1;min-width:0;display:flex;flex-direction:column}header{display:flex;gap:12px;align-items:center;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--bd)}
+header b{font-size:17px}header .sp{flex:1}header small{color:var(--mu)}
+#v{flex:1;overflow:auto;padding:18px 20px}footer{padding:8px 20px;text-align:center;color:var(--mu);font-size:12px;border-top:1px solid var(--bd);background:var(--card)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer}.stat b{display:block;font-size:24px}.stat span{color:var(--mu);font-size:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:16px;overflow-x:auto}
+.card h3{margin:0 0 10px;font-size:15px}table{border-collapse:collapse;width:100%;min-width:560px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mu);font-size:12px;font-weight:600}
+td.n,th.n{text-align:right}form.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mu)}input,select{font:inherit;padding:7px 8px;border:1px solid var(--bd);border-radius:7px;background:var(--card);color:var(--tx)}
+.btn{font:inherit;cursor:pointer;background:var(--pr);color:var(--prt);border:0;border-radius:7px;padding:8px 14px;font-weight:600}.btn.g{background:var(--in);color:var(--tx);border:1px solid var(--bd)}.btn.s{padding:3px 8px;font-size:12px}
+.tag{padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:var(--in)}.tag.ok{color:var(--ok)}.tag.wa{color:var(--wa)}.tag.cr{color:var(--cr)}
+#t{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:10px 14px;border-radius:8px;color:#fff;background:var(--ok);display:none;max-width:320px;z-index:9}#t.e{background:var(--cr)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}.mu{color:var(--mu)}
+@media(max-width:700px){body{flex-direction:column}nav{width:auto;flex-direction:row;overflow-x:auto;padding:6px}nav h1{display:none}nav button{white-space:nowrap}#v{padding:12px}}
+</style></head><body>
+<nav id="nav"><h1>📦 Japhet Stock Management System</h1></nav>
+<main><header><b id="ttl"></b><span class="sp"></span><small id="clk"></small><button class="btn g s" onclick="resetDemo()">Reset demo data</button></header>
+<div id="v"></div><footer>Designed and Created by Japhet Assey · Demo runs in your browser only · Currency: TZS</footer></main><div id="t"></div>
+<script>
+const LOC=['Main Store','Bar Counter','Kitchen','Cocktail & Juice Station','Cleaning Supplies Store'];
+const UN=['Piece','Bottle','Can','Crate','Carton','Box','Packet','Kilogram','Litre','Bag','Roll'];
+const TY={OPENING_STOCK:'Opening Stock',GOODS_RECEIVED:'Goods Received',TRANSFER:'Transfer',KITCHEN_CONSUMPTION:'Kitchen Consumption',COCKTAIL_CONSUMPTION:'Cocktail Consumption',JUICE_CONSUMPTION:'Juice Consumption',INTERNAL_USE:'Internal Use',DAMAGED:'Damaged Goods',EXPIRED:'Expired Goods',ADJUSTMENT:'Stock Adjustment',SALE:'Sale',REVERSAL:'Reversal'};
+const PFX={OPENING_STOCK:'OPN',GOODS_RECEIVED:'GRN',TRANSFER:'TRF',KITCHEN_CONSUMPTION:'KCN',COCKTAIL_CONSUMPTION:'CCN',JUICE_CONSUMPTION:'JCN',INTERNAL_USE:'IUS',DAMAGED:'DMG',EXPIRED:'EXP',ADJUSTMENT:'ADJ',SALE:'SAL',REVERSAL:'REV'};
+const ISSUE=['KITCHEN_CONSUMPTION','COCKTAIL_CONSUMPTION','JUICE_CONSUMPTION','INTERNAL_USE','DAMAGED','EXPIRED'];
+const NAV=['Dashboard','Sales','Inventory','Receive Goods','Transfers','Issue / Consume','Alerts','Movements','About'];
+let S,page='Dashboard',flt={loc:'',q:'',type:'',alert:''};const KEY='jsms-demo-2';let cart=[];
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const M=v=>Math.round(parseFloat(v)*1000),F=m=>(m/1000).toLocaleString('en-US',{maximumFractionDigits:3}),TZS=c=>c==null?'—':'TZS '+Math.round(c).toLocaleString('en-US');
+const D=iso=>new Date(iso).toLocaleString('en-GB',{timeZone:'Africa/Dar_es_Salaam',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const dayKey=iso=>new Date(iso).toLocaleDateString('en-GB',{timeZone:'Africa/Dar_es_Salaam'});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}if(!S)seed()}
+function toast(m,err){const t=$('#t');t.textContent=m;t.className=err?'e':'';t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',3500)}
+/* ---- ledger: each line moves qty FROM and/or TO a location; balances are derived only from lines ---- */
+function bal(pid,loc,lines=S.lines){let b=0;for(const l of lines){if(l.pid!=pid)continue;if(l.to===loc)b+=l.q;if(l.from===loc)b-=l.q}return b}
+function total(pid){let b=0;for(const l of S.lines)if(l.pid==pid){if(l.to!=null)b+=l.q;if(l.from!=null)b-=l.q}return b}
+function post(type,lines,note,extra={}){
+  if(!lines.length)throw Error('Add at least one line');
+  const n=lines.length,mark=S.lines.length,tm=S.txns.length;
+  const ref=PFX[type]+'-'+String((S.seq[type]=(S.seq[type]||0)+1)).padStart(5,'0');
+  const id=S.txns.length+1;S.txns.push({id,ref,type,at:extra.at||new Date().toISOString(),note:note||'',user:'admin',...extra});
+  try{for(const l of lines){if(!(l.q>0))throw Error('Quantity must be greater than zero');if(l.from!=null&&l.from===l.to)throw Error('Source and destination must differ');S.lines.push({tid:id,...l})}
+    for(const l of lines)if(l.from!=null&&bal(l.pid,l.from)<0&&!S.neg){const p=prod(l.pid);throw Error(`Not enough stock: ${p.name} at ${LOC[l.from]} has ${F(bal(l.pid,l.from)+l.q)} ${p.unit}`)}
+  }catch(e){S.lines.length=mark;S.txns.length=tm;S.seq[type]--;throw e}  // atomic: nothing partial remains
+  save();return ref}
+const prod=id=>S.products.find(p=>p.id==id);
+const saleTx=f=>S.txns.filter(t=>t.type==='SALE'&&!S.txns.some(x=>x.reverses===t.id)&&f(t));
+const salesLines=f=>saleTx(f).flatMap(t=>S.lines.filter(l=>l.tid===t.id));
+const revOf=ls=>ls.reduce((s,l)=>s+l.q/1000*l.price,0);
+const today0=()=>dayKey(new Date().toISOString());
+const locRev=(i,f)=>revOf(salesLines(f).filter(l=>l.from===i));
+function seed(){S={products:[],txns:[],lines:[],seq:{},neg:false};
+  const P=(name,unit,cost,conv,thr)=>{const id=S.products.length+1;S.products.push({id,name,unit,cost,conv:conv||{},thr:thr||{}});return id};
+  const a=P('Safari Lager 500ml','Bottle',150000,{Crate:24},{0:{min:48,crit:24,target:240},1:{min:24,crit:12,target:96}});
+  const b=P('Coca-Cola 300ml','Bottle',60000,{Crate:24},{1:{min:24,crit:12,target:96}});
+  const c=P('Rice (Pishori)','Kilogram',280000,{},{2:{min:20,crit:10,target:100}});
+  const d=P('Cooking Oil','Litre',650000,{},{2:{min:10,crit:5,target:40}});
+  const e=P('Oranges','Kilogram',null,{},{3:{min:15,crit:8,target:50}});
+  const f=P('Hand Soap (no price)','Piece',null,{},{4:{min:10,crit:4,target:30}});
+  const g=P('Garbage Bags (no price)','Roll',null,{},{4:{min:6,crit:3,target:20}});
+  const day=n=>new Date(Date.now()-n*864e5).toISOString();
+  const o=(pid,loc,q,at)=>post('OPENING_STOCK',[{pid,to:loc,q:q*1000}],'Opening stock',{at});
+  o(a,0,300,day(5));o(b,0,120,day(5));o(c,0,80,day(5));o(d,0,30,day(5));o(e,0,40,day(5));o(f,4,12,day(5));o(g,4,8,day(5));
+  post('TRANSFER',[{pid:a,from:0,to:1,q:60000},{pid:b,from:0,to:1,q:24000}],'Bar restock',{at:day(2)});
+  post('TRANSFER',[{pid:c,from:0,to:2,q:25000},{pid:d,from:0,to:2,q:8000}],'Kitchen issue',{at:day(2)});
+  post('TRANSFER',[{pid:e,from:0,to:3,q:20000}],'Juice station',{at:day(1)});
+  post('KITCHEN_CONSUMPTION',[{pid:c,from:2,q:17000}],'Lunch service',{at:day(1)});
+  post('JUICE_CONSUMPTION',[{pid:e,from:3,q:13000}],'Orange juice batch: 13 kg',{at:day(1)});
+  post('INTERNAL_USE',[{pid:a,from:1,q:44000}],'Bar usage',{at:day(1)});
+  post('DAMAGED',[{pid:f,from:4,q:3000}],'Dropped',{at:day(1)});
+  S.products.forEach((p,i)=>p.sell=[2500,1000,null,null,4000,null,null][i]);
+  post('SALE',[{pid:a,from:1,q:6000,price:2500},{pid:b,from:1,q:4000,price:1000}],'Bar sales',{at:day(1)});
+  post('SALE',[{pid:b,from:1,q:2000,price:1000}],'Bar sales');
+  S.nextPid=S.products.length+1;save()}
+function resetDemo(){if(confirm('Reset all data back to the demo data?')){localStorage.removeItem(KEY);seed();go('Dashboard');toast('Demo data restored')}}
+/* ---- alerts: per product per location thresholds, read-only ---- */
+function alerts(){const out=[];for(const p of S.products)for(const k in p.thr){const loc=+k,t=p.thr[k],q=bal(p.id,loc);let ty=null;
+  if(q<0)ty='Below zero';else if(q===0)ty='Out of stock';else if(t.crit!=null&&q<=t.crit*1000)ty='Critical';else if(t.min!=null&&q<=t.min*1000)ty='Low';
+  if(ty){const last=S.lines.filter(l=>l.pid==p.id&&(l.from===loc||l.to===loc)).map(l=>S.txns[l.tid-1].at).sort().pop();
+  out.push({p,loc,q,t,ty,sug:t.target!=null?Math.max(0,t.target*1000-Math.max(q,0)):0,last})}}return out}
+const sev=t=>t==='Low'?'wa':'cr';
+/* ---- views ---- */
+const locOpts=(sel,all)=>(all?'<option value="">All locations</option>':'')+LOC.map((n,i)=>`<option value="${i}"${sel===String(i)?' selected':''}>${n}</option>`).join('');
+const prodOpts=()=>S.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+function unitSel(pid){const p=prod(pid||S.products[0]?.id);return p?[p.unit,...Object.keys(p.conv)].map(u=>`<option>${u}</option>`).join(''):''}
+function fillU(el){const u=el.form.unit;u.innerHTML=unitSel(el.value);if(el.form.price)el.form.price.value=prod(el.value).sell??''}
+function rmCart(i){cart.splice(i,1);render()}
+function sellCart(){try{const ref=post('SALE',cart.map(c=>({...c})),($('#snote')||{}).value||'');cart=[];toast('Sale recorded '+ref);render()}catch(e){toast(e.message,1)}}
+const tbl=(h,rows,empty)=>rows.length?`<table><tr>${h.map(x=>`<th class="${x[0]=='#'?'n':''}">${x.replace('#','')}</th>`).join('')}</tr>${rows.join('')}</table>`:`<p class="mu">${empty}</p>`;
+const V={
+Dashboard(){const A=alerts(),today=dayKey(new Date().toISOString());const tt=S.txns.filter(t=>dayKey(t.at)===today);
+  const cnt=ty=>tt.filter(t=>ty.includes(t.type)).length;
+  const st=[['Active products',S.products.length,'Inventory'],['Low stock',A.filter(a=>a.ty==='Low').length,'Alerts'],['Critical',A.filter(a=>a.ty==='Critical').length,'Alerts'],['Out of stock',A.filter(a=>a.ty==='Out of stock').length,'Alerts'],
+   ['Received today',cnt(['GOODS_RECEIVED']),'Movements'],['Transfers today',cnt(['TRANSFER']),'Movements'],['Consumption today',cnt(ISSUE.slice(0,4)),'Movements'],['Damaged today',cnt(['DAMAGED','EXPIRED']),'Movements'],['Sales today (TZS)',Math.round(revOf(salesLines(t=>dayKey(t.at)===today))).toLocaleString('en-US'),'Sales'],['Sales recorded today',saleTx(t=>dayKey(t.at)===today).length,'Sales']];
+  return `<div class="grid">${st.map(s=>`<div class="stat" onclick="go('${s[2]}')"><b>${s[1]}</b><span>${s[0]}</span></div>`).join('')}</div>
+  <div class="card"><h3>Recent movements</h3>${mvTable(S.txns.slice(-8).reverse(),false)}</div>
+  <div class="card"><h3>Sales by location (today)</h3>${tbl(['Location','#Sales today (TZS)'],LOC.map((n,i)=>`<tr><td>${n}</td><td class="n">${TZS(locRev(i,t=>dayKey(t.at)===today))}</td></tr>`),'')}<p class="mu">Recorded sales revenue only. This is not profit.</p></div>
+  <div class="card"><h3>Stock by location (quantity items)</h3>${tbl(['Location','#Products held'],LOC.map((n,i)=>`<tr><td>${n}</td><td class="n">${S.products.filter(p=>bal(p.id,i)>0).length}</td></tr>`),'')}</div>`},
+Inventory(){const q=flt.q.toLowerCase(),rows=[];
+  for(const p of S.products){if(q&&!p.name.toLowerCase().includes(q))continue;
+    LOC.forEach((n,i)=>{if(flt.loc!==''&&+flt.loc!==i)return;const b=bal(p.id,i);if(!b&&!p.thr[i])return;const th=p.thr[i]||{};
+      const st=b<0?['Below zero','cr']:b===0?['Out','cr']:th.crit!=null&&b<=th.crit*1000?['Critical','cr']:th.min!=null&&b<=th.min*1000?['Low','wa']:['OK','ok'];
+      rows.push(`<tr><td>${esc(p.name)}</td><td>${n}</td><td class="n">${F(b)}</td><td>${p.unit}</td><td><span class="tag ${st[1]}">${st[0]}</span></td><td class="n">${p.cost==null?'<span class="mu">Unvalued</span>':TZS(b/1000*p.cost/100)}</td></tr>`)})}
+  return `<div class="row"><select onchange="flt.loc=this.value;render()">${locOpts(flt.loc,1)}</select><input placeholder="Search product" value="${esc(flt.q)}" oninput="flt.q=this.value;render(1)" id="q"></div>
+  <div class="card">${tbl(['Product','Location','#Quantity','Unit','Status','#Value'],rows,'No stock to show.')}</div>
+  <div class="card"><h3>Add product</h3><form class="f" data-act="addp"><label>Name<input name="name" required></label><label>Base unit<select name="unit">${UN.map(u=>`<option>${u}</option>`).join('')}</select></label>
+  <label>Pricing<select name="hp"><option value="0">No Price</option><option value="1">Has Price</option></select></label><label>Purchase cost (TZS)<input name="cost" type="number" min="0" step="1" placeholder="only if Has Price"></label><label>Selling price (TZS)<input name="sell" type="number" min="0" step="1" placeholder="only if Has Price"></label>
+  <label>Min stock (all locations)<input name="min" type="number" min="0" step="any"></label><label>Critical<input name="crit" type="number" min="0" step="any"></label><button class="btn">Add product</button></form></div>`},
+Sales(){const ct=cart.reduce((s,c)=>s+c.q/1000*c.price,0);
+  return `<div class="card"><h3>Record a sale</h3><form class="f" data-act="cart"><label>Sold from<select name="loc">${locOpts(String(flt.sloc??1))}</select></label><label>Product<select name="pid" onchange="fillU(this)">${prodOpts()}</select></label><label>Quantity<input name="qty" type="number" min="0.001" step="any" required></label><label>Unit<select name="unit">${unitSel()}</select></label><label>Price per base unit (TZS)<input name="price" type="number" min="0" step="any" value="${S.products[0]?.sell??''}" required></label><button class="btn g">Add to sale</button></form>
+  <p class="mu">Sales can be recorded from any location. Recording the sale deducts that location's stock.</p></div>
+  <div class="card"><h3>Current sale</h3>${tbl(['Location','Product','#Qty','#Price','#Total',''],cart.map((c,i)=>{const p=prod(c.pid);return `<tr><td>${LOC[c.from]}</td><td>${esc(p.name)}</td><td class="n">${F(c.q)} ${p.unit}</td><td class="n">${TZS(c.price)}</td><td class="n">${TZS(c.q/1000*c.price)}</td><td><button class="btn g s" type="button" onclick="rmCart(${i})">Remove</button></td></tr>`}),'No items yet.')}
+  <div class="row"><input id="snote" placeholder="Note (optional)"><b>Total: ${TZS(ct)}</b><button class="btn" onclick="sellCart()"${cart.length?'':' disabled'}>Record sale</button></div></div>
+  <div class="card"><h3>Sales by location</h3>${tbl(['Location','#Today (TZS)','#All recorded (TZS)'],LOC.map((n,i)=>`<tr><td>${n}</td><td class="n">${TZS(locRev(i,t=>dayKey(t.at)===today0()))}</td><td class="n">${TZS(locRev(i,()=>1))}</td></tr>`),'')}<p class="mu">Recorded sales revenue only. This is not profit.</p></div>
+  <div class="card"><h3>Recent sales</h3>${mvTable(saleTx(()=>1).slice(-8).reverse(),false)}</div>`},
+'Receive Goods'(){return `<div class="card"><h3>Goods Received Note</h3><form class="f" data-act="recv"><label>Receive into<select name="loc">${locOpts('0')}</select></label><label>Invoice ref<input name="inv"></label>
+  <label>Product<select name="pid" onchange="fillU(this)">${prodOpts()}</select></label><label>Quantity<input name="qty" type="number" min="0.001" step="any" required></label><label>Unit<select name="unit">${unitSel()}</select></label>
+  <label>Unit cost (optional, TZS)<input name="cost" type="number" min="0" step="1"></label><button class="btn">Post GRN</button></form>
+  <p class="mu">Example: 3 crates of Safari Lager adds 72 bottles. Posting adds stock exactly once.</p></div>
+  <div class="card"><h3>Recent receipts</h3>${mvTable(S.txns.filter(t=>t.type==='GOODS_RECEIVED').slice(-8).reverse(),false)}</div>`},
+Transfers(){return `<div class="card"><h3>Transfer between locations</h3><form class="f" data-act="trf"><label>From<select name="from">${locOpts('0')}</select></label><label>To<select name="to">${locOpts('1')}</select></label>
+  <label>Product<select name="pid" onchange="fillU(this)">${prodOpts()}</select></label><label>Quantity<input name="qty" type="number" min="0.001" step="any" required></label><label>Unit<select name="unit">${unitSel()}</select></label><label>Note<input name="note"></label><button class="btn">Transfer</button></form>
+  <p class="mu">A transfer moves stock; it is never counted as a purchase, and total business stock does not change.</p></div>
+  <div class="card"><h3>Recent transfers</h3>${mvTable(S.txns.filter(t=>t.type==='TRANSFER').slice(-8).reverse(),false)}</div>`},
+'Issue / Consume'(){return `<div class="card"><h3>Record consumption, damage or expiry</h3><form class="f" data-act="iss"><label>Type<select name="type">${ISSUE.map(t=>`<option value="${t}">${TY[t]}</option>`).join('')}</select></label>
+  <label>Location<select name="loc">${locOpts('2')}</select></label><label>Product<select name="pid" onchange="fillU(this)">${prodOpts()}</select></label><label>Quantity<input name="qty" type="number" min="0.001" step="any" required></label><label>Unit<select name="unit">${unitSel()}</select></label>
+  <label>Reason / note<input name="note"></label><button class="btn">Post</button></form>
+  <p class="mu">Stock issued to a department is not consumption until you record it here. Negative stock is blocked.</p></div>
+  <div class="card"><h3>Adjustment (requires reason)</h3><form class="f" data-act="adj"><label>Location<select name="loc">${locOpts('0')}</select></label><label>Product<select name="pid">${prodOpts()}</select></label>
+  <label>Change (+/−)<input name="qty" type="number" step="any" required></label><label>Reason<input name="note" required></label><button class="btn g">Post adjustment</button></form></div>`},
+Alerts(){const A=alerts().filter(a=>!flt.alert||a.ty===flt.alert);
+  return `<div class="row"><select onchange="flt.alert=this.value;render()"><option value="">All alert types</option>${['Low','Critical','Out of stock','Below zero'].map(t=>`<option${flt.alert===t?' selected':''}>${t}</option>`).join('')}</select></div>
+  <div class="card">${tbl(['Product','Location','#Current','#Min','#Critical','#Reorder target','#Suggested order','Alert','Last movement'],A.map(a=>`<tr><td>${esc(a.p.name)}</td><td>${LOC[a.loc]}</td><td class="n">${F(a.q)}</td><td class="n">${a.t.min??'—'}</td><td class="n">${a.t.crit??'—'}</td><td class="n">${a.t.target??'—'}</td><td class="n">${F(a.sug)} ${a.p.unit}</td><td><span class="tag ${sev(a.ty)}">${a.ty}</span></td><td>${a.last?D(a.last):'—'}</td></tr>`),'No alerts. All stock levels are above their thresholds.')}</div>
+  <p class="mu">Thresholds are set per product per location. Alerts never change quantities.</p>`},
+Movements(){const T=S.txns.filter(t=>(!flt.type||t.type===flt.type)&&(flt.loc===''||S.lines.some(l=>l.tid===t.id&&(l.from==flt.loc||l.to==flt.loc)))).slice().reverse();
+  return `<div class="row"><select onchange="flt.type=this.value;render()"><option value="">All types</option>${Object.keys(TY).map(k=>`<option value="${k}"${flt.type===k?' selected':''}>${TY[k]}</option>`).join('')}</select><select onchange="flt.loc=this.value;render()">${locOpts(flt.loc,1)}</select></div>
+  <div class="card">${mvTable(T,true)}</div><p class="mu">Posted movements are never edited or deleted. Mistakes are corrected with a Reversal that keeps the original.</p>`},
+About(){return `<div class="card"><h3>About this demo</h3><p>This is a working browser preview of the Japhet Stock Management System. Data is kept in this browser only (nothing is sent anywhere). The same ledger rules as the desktop engine apply: quantities derive from posted movements, transfers net to zero, negative stock is blocked, posting is all-or-nothing, and corrections are reversals.</p>
+  <p>Cocktail and Juice share one station, so their ingredients, production and consumption are tracked in the same location. Sales deduct stock from whichever location they are sold from.</p><p class="mu">Not in this preview: users and permissions, stock requests, stocktakes, recipes, reports with PDF/Excel export, backup and restore. The Windows installer is a separate build.</p></div>`}};
+function mvTable(T,rev){return tbl(['Date','Ref','Type','Product','From → To','#Qty','Note',...(rev?['']:[])],T.map(t=>{const Ls=S.lines.filter(l=>l.tid===t.id);const reversed=S.txns.some(x=>x.reverses===t.id);
+  return Ls.map((l,i)=>{const p=prod(l.pid);return `<tr><td>${i?'':D(t.at)}</td><td>${i?'':t.ref}</td><td>${i?'':TY[t.type]}</td><td>${esc(p.name)}</td><td>${l.from!=null?LOC[l.from]:'External'} → ${l.to!=null?LOC[l.to]:'Out'}</td><td class="n">${F(l.q)} ${p.unit}</td><td>${i?'':esc(t.note)}</td>${rev?`<td>${!i&&t.type!=='REVERSAL'&&t.type!=='OPENING_STOCK'?(reversed?'<span class="mu">Reversed</span>':`<button class="btn g s" onclick="reverse(${t.id})">Reverse</button>`):''}</td>`:''}</tr>`}).join('')}),'No movements yet.')}
+function reverse(id){const why=prompt('Reason for reversing this transaction (required):');if(!why||!why.trim())return;const t=S.txns[id-1];
+  try{const ls=S.lines.filter(l=>l.tid===id).map(l=>({pid:l.pid,q:l.q,from:l.to??null,to:l.from??null}));
+  const r=post('REVERSAL',ls,`Reversal of ${t.ref}: ${why}`,{reverses:id});toast('Posted '+r);render()}catch(e){toast(e.message,1)}}
+/* ---- actions ---- */
+function toBase(p,qty,unit){const m=M(qty);if(unit===p.unit)return m;const f=p.conv[unit];if(!f)throw Error('No conversion for '+unit);return m*f}
+document.addEventListener('submit',e=>{const f=e.target;if(!f.dataset.act)return;e.preventDefault();const d=Object.fromEntries(new FormData(f));
+  try{const a=f.dataset.act;let ref;
+   if(a==='addp'){const hp=d.hp==='1';if(!hp&&(d.cost||d.sell))throw Error('Set Pricing to "Has Price" to enter a cost or selling price');if(S.products.some(p=>p.name.toLowerCase()===d.name.trim().toLowerCase()))throw Error('A product with this name already exists');
+     const thr={};const mn=d.min!==''?+d.min:null,cr=d.crit!==''?+d.crit:null;if(mn!=null&&cr!=null&&cr>mn)throw Error('Critical cannot exceed minimum');
+     if(mn!=null||cr!=null)LOC.forEach((_,i)=>thr[i]={min:mn,crit:cr,target:mn!=null?mn*3:null});
+     S.products.push({id:S.nextPid++,name:d.name.trim(),unit:d.unit,cost:hp&&d.cost?+d.cost*100:null,sell:hp&&d.sell?+d.sell:null,conv:{},thr});save();toast('Product added');render();return}
+   const p=prod(d.pid);
+   if(a==='cart'){if(d.price===''||+d.price<0)throw Error('Enter a selling price (0 for complimentary)');flt.sloc=d.loc;cart.push({pid:p.id,from:+d.loc,q:toBase(p,d.qty,d.unit),price:+d.price});toast('Added to sale');render();return}
+   if(a==='recv'){const q=toBase(p,d.qty,d.unit);ref=post('GOODS_RECEIVED',[{pid:p.id,to:+d.loc,q}],'Invoice '+(d.inv||'n/a'));if(d.cost&&p.cost==null){/* cost recorded only if known */}}
+   if(a==='trf'){if(d.from===d.to)throw Error('Choose two different locations');ref=post('TRANSFER',[{pid:p.id,from:+d.from,to:+d.to,q:toBase(p,d.qty,d.unit)}],d.note)}
+   if(a==='iss')ref=post(d.type,[{pid:p.id,from:+d.loc,q:toBase(p,d.qty,d.unit)}],d.note);
+   if(a==='adj'){const m=M(d.qty);if(!m)throw Error('Change is zero');ref=post('ADJUSTMENT',[m>0?{pid:p.id,to:+d.loc,q:m}:{pid:p.id,from:+d.loc,q:-m}],d.note)}
+   toast('Posted '+ref);f.reset();render()}catch(err){toast(err.message,1)}});
+function go(p){page=p;render()}
+function render(keep){$('#ttl').textContent=page;$('#nav').innerHTML='<h1>📦 Japhet Stock Management System</h1>'+NAV.map(n=>`<button class="${n===page?'on':''}" onclick="go('${n}')">${n}</button>`).join('');
+  if(keep&&page==='Inventory'){const pos=$('#q').selectionStart;$('#v').innerHTML=V[page]();const q=$('#q');q.focus();q.setSelectionRange(pos,pos)}else $('#v').innerHTML=V[page]();}
+setInterval(()=>{$('#clk').textContent=new Date().toLocaleString('en-GB',{timeZone:'Africa/Dar_es_Salaam',dateStyle:'short',timeStyle:'medium'})},1000);
+load();render();
+</script></body></html>
